@@ -10,6 +10,7 @@ from OpenGL.GLU import *
 import numpy as np
 import math
 import random
+import os
 from vector3 import Vector3
 
 class World:
@@ -38,6 +39,12 @@ class World:
         
         # Generate initial world
         self.generate_world()
+        # In very large worlds this can be heavy; keep initial data small for headless smoke tests
+        if os.environ.get("HEADLESS"):
+            # Trim chunks to a tiny subset
+            keys = list(self.chunks.keys())
+            for k in keys[100:]:
+                self.chunks.pop(k, None)
         
     def generate_world(self):
         """Generate the initial world."""

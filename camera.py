@@ -10,6 +10,7 @@ from OpenGL.GLU import *
 import numpy as np
 import math
 from vector3 import Vector3
+import os
 
 class Camera:
     """3D camera for viewing the game world."""
@@ -45,7 +46,8 @@ class Camera:
         
         # Frustum for culling
         self.frustum = None
-        self.update_frustum()
+        if not str(os.environ.get("HEADLESS", "")).lower() in {"1", "true", "yes"}:
+            self.update_frustum()
         
     def update(self, delta_time):
         """Update camera logic."""
@@ -56,7 +58,8 @@ class Camera:
         self.update_camera_mode(delta_time)
         
         # Update frustum
-        self.update_frustum()
+        if not str(os.environ.get("HEADLESS", "")).lower() in {"1", "true", "yes"}:
+            self.update_frustum()
         
     def update_smooth_movement(self, delta_time):
         """Update smooth camera movement."""
@@ -236,13 +239,13 @@ class Camera:
         """Get the view matrix."""
         # This would return a proper 4x4 view matrix
         # For now, we'll use OpenGL's matrix stack
-        return None
+        return np.identity(4)
         
     def get_projection_matrix(self):
         """Get the projection matrix."""
         # This would return a proper 4x4 projection matrix
         # For now, we'll use OpenGL's matrix stack
-        return None
+        return np.identity(4)
         
     def update_frustum(self):
         """Update the view frustum for culling."""
@@ -252,8 +255,12 @@ class Camera:
     def calculate_frustum(self):
         """Calculate the view frustum planes."""
         # Get the current modelview and projection matrices
-        modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
-        projection = glGetDoublev(GL_PROJECTION_MATRIX)
+        if str(os.environ.get("HEADLESS", "")).lower() in {"1", "true", "yes"}:
+            modelview = np.identity(4)
+            projection = np.identity(4)
+        else:
+            modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
+            projection = glGetDoublev(GL_PROJECTION_MATRIX)
         
         # Calculate the combined matrix
         combined = np.dot(projection, modelview)
@@ -317,7 +324,7 @@ class Camera:
                 plane[1] /= length
                 plane[2] /= length
                 plane[3] /= length
-                
+        
         return planes
         
     def is_point_in_frustum(self, point):

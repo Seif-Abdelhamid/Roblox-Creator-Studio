@@ -149,6 +149,10 @@ roblox-creator-studio/
 
 3. **Run the game**
    ```bash
+   # Headless smoke test (no display required)
+   HEADLESS=1 python main.py
+
+   # Full run (requires OpenGL/display)
    python main.py
    ```
 
