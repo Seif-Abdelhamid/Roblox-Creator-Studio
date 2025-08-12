@@ -9,6 +9,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 import numpy as np
 import math
+import os
 from vector3 import Vector3
 
 class LightingSystem:
@@ -37,7 +38,8 @@ class LightingSystem:
         self.day_length = 1200.0  # seconds for full day cycle
         
         # Initialize lighting
-        self.setup_lighting()
+        if not str(os.environ.get("HEADLESS", "")).lower() in {"1", "true", "yes"}:
+            self.setup_lighting()
         
     def setup_lighting(self):
         """Setup OpenGL lighting."""

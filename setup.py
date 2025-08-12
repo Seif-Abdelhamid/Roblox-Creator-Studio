@@ -227,9 +227,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'roblox-creator-studio=main:main',
-            'rcs-server=go.server.main:main',
-            'rcs-ui=typescript.src.main:main',
+            'creator-studio=main:main'
         ],
     },
     zip_safe=False,

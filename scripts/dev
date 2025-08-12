@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cmd=${1:-}
+case "$cmd" in
+  headless)
+    HEADLESS=1 HEADLESS_TICKS=${HEADLESS_TICKS:-120} python3 main.py ;;
+  server)
+    cd docker && docker compose -f docker-compose.min.yml up --build -d ;;
+  run)
+    cd docker && docker compose -f docker-compose.min.yml up --build -d
+    python3 main.py ;;
+  *)
+    echo "Usage: scripts/dev [headless|server|run]" ;;
+ esac

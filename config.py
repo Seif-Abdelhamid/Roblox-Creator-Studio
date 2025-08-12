@@ -20,6 +20,9 @@ class GameConfig:
         self.VERSION = "1.0.0"
         self.DEBUG_MODE = False
         
+        # Headless mode (for CI/smoke tests or environments without a display)
+        self.HEADLESS = str(os.environ.get("HEADLESS", "0")).lower() in {"1", "true", "yes"}
+        
         # Network settings
         self.SERVER_HOST = "localhost"
         self.SERVER_PORT = 8080
