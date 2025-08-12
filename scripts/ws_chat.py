@@ -15,7 +15,7 @@ SERVER = os.environ.get("WS_URL", "ws://localhost:8081/ws")
 def main():
     print(f"Connecting to {SERVER} ...")
     messages = [
-        {"type": "chat", "data": {"text": "hello from client"}},
+        {"type": "chat", "data": {"message": "hello from client"}},
         {"type": "playerUpdate", "data": {"playerId": "demo", "position": {"x": 0, "y": 0, "z": 0}}},
     ]
 
