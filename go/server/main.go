@@ -120,7 +120,11 @@ func (gs *GameServer) handleWebSocket(upgrader websocket.Upgrader, w http.Respon
 
 	// Create new client
 	client := networking.NewClient(conn, gs)
+	client.CloseFunc = func(c *networking.Client) {
+		gs.unregister <- c
+	}
 	gs.register <- client
+	client.Start()
 
 	log.Printf("👤 New player connected: %s", client.ID)
 }

@@ -45,6 +45,14 @@ See `docs/ARCHITECTURE.md` for component responsibilities and message shapes.
 ## Development
 - Python: `HEADLESS=1 python3 main.py`
 - Go server: `cd docker && docker compose -f docker-compose.min.yml up --build -d`
+- Chat demo:
+```bash
+# Terminal A: start server
+cd docker && docker compose -f docker-compose.min.yml up --build -d
+
+# Terminal B: run a simple chat client
+python3 scripts/ws_chat.py
+```
 - Tests (CI uses headless smoke):
 ```bash
 pytest -q            # if you have pytest installed

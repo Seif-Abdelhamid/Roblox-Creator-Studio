@@ -1,9 +1,11 @@
 package networking
 
 import (
+	"encoding/json"
 	"log"
-	"github.com/gorilla/websocket"
+
 	"github.com/Seif-Abdelhamid/roblox-creator-studio/models"
+	"github.com/gorilla/websocket"
 	"github.com/google/uuid"
 )
 
@@ -14,6 +16,7 @@ type Client struct {
 	ID           string
 	Conn         *websocket.Conn
 	MessageQueue chan models.GameMessage
+	CloseFunc    func(*Client)
 }
 
 // NewClient creates a new client instance
@@ -25,7 +28,35 @@ func NewClient(conn *websocket.Conn, _ interface{}) *Client {
 	}
 }
 
-// Send enqueues a message to be sent to this client
+// Start begins reading messages from the websocket and enqueues them
+func (c *Client) Start() {
+	go func() {
+		defer func() {
+			if c.CloseFunc != nil {
+				c.CloseFunc(c)
+			}
+		}()
+		for {
+			var msg models.GameMessage
+			_, raw, err := c.Conn.ReadMessage()
+			if err != nil {
+				log.Printf("client %s read error: %v", c.ID, err)
+				return
+			}
+			if err := json.Unmarshal(raw, &msg); err != nil {
+				log.Printf("client %s json error: %v", c.ID, err)
+				continue
+			}
+			select {
+			case c.MessageQueue <- msg:
+			default:
+				log.Printf("client %s message queue full, dropping msg", c.ID)
+			}
+		}
+	}()
+}
+
+// Send enqueues a message to be sent to this client and attempts immediate write
 func (c *Client) Send(msg models.GameMessage) {
 	select {
 	case c.MessageQueue <- msg:
@@ -33,6 +64,5 @@ func (c *Client) Send(msg models.GameMessage) {
 	default:
 		log.Printf("client %s message queue full, dropping message", c.ID)
 	}
-	// Best-effort immediate send as well
 	_ = c.Conn.WriteJSON(msg)
 }
