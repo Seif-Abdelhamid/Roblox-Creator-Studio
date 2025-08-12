@@ -5,6 +5,11 @@ import sys
 import threading
 import time
 
+# Ensure repo root on path
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+
 from headless_shims import activate_headless_shims
 activate_headless_shims()
 

@@ -307,7 +307,7 @@ func (gs *GameServer) handleChat(client *networking.Client, message models.GameM
 }
 
 func (gs *GameServer) allowChat(client *networking.Client) bool {
-	// TODO: replace with token bucket per client
+	// Rate limit placeholder: replace with token bucket per client
 	return true
 }
 

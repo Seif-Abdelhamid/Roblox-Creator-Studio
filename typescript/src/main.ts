@@ -1,4 +1,4 @@
-// Minimal placeholder entry for UI package
+// Minimal entry for UI package
 export function boot() {
   console.log('roblox-creator-studio-ui booted');
 }

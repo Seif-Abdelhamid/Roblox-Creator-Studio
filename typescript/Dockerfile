@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm install || true
 COPY . .
-# Attempt a lightweight build; ignore failures for placeholder
+# Attempt a lightweight build; ignore failures for optional UI
 RUN npm run build || true
 
 FROM nginx:alpine

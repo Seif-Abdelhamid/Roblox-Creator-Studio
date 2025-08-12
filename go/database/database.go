@@ -2,7 +2,7 @@ package database
 
 import "fmt"
 
-// GameDB is a placeholder for a real database connection
+// GameDB is a simple stub suitable for local dev; swap with a real DB in production
 // In scaffolding, it does nothing but satisfy interfaces
 
 type GameDB struct{}

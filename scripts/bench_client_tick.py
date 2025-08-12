@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 import os
+import sys
 import time
+
+# Ensure repo root on path
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
 
 os.environ.setdefault("HEADLESS", "1")
 os.environ.setdefault("HEADLESS_TICKS", "0")  # we drive our own loop
