@@ -2,6 +2,10 @@
 
 > A focused, demo-first showcase of real-time 3D, networking, and systems engineering.
 
+<p align="center">
+  <img src="docs/demo.gif" alt="Creator Studio demo" width="720"/>
+</p>
+
 ## TL;DR (Run it in 10 seconds)
 
 - Headless smoke (no OpenGL needed):
@@ -25,6 +29,8 @@ bash scripts/dev headless    # headless smoke
 bash scripts/dev server      # Go server only
 bash scripts/dev run         # server + local client (desktop)
 ```
+
+[How to record and add the demo GIF](docs/DEMO.md)
 
 ## What this project demonstrates
 - Real-time 3D client (Python, OpenGL) with engine subsystems (world, physics, camera, lighting, UI)
