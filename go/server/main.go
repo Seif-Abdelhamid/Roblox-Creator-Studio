@@ -20,6 +20,7 @@ import (
 	"github.com/Seif-Abdelhamid/roblox-creator-studio/networking"
 	"github.com/Seif-Abdelhamid/roblox-creator-studio/database"
 	"github.com/Seif-Abdelhamid/roblox-creator-studio/models"
+	"github.com/google/uuid"
 )
 
 // GameServer represents the main game server
@@ -117,6 +118,9 @@ func (gs *GameServer) handleWebSocket(upgrader websocket.Upgrader, w http.Respon
 		return
 	}
 	gs.mutex.RUnlock()
+
+	// Demonstrate uuid usage to ensure module resolution
+	_ = uuid.NewString()
 
 	// Create new client
 	client := networking.NewClient(conn, gs)
