@@ -2,10 +2,6 @@
 
 > A focused, demo-first showcase of real-time 3D, networking, and systems engineering.
 
-<p align="center">
-  <img src="docs/demo.gif" alt="Creator Studio demo" width="720"/>
-</p>
-
 ## TL;DR (Run it in 10 seconds)
 
 - Headless smoke (no OpenGL needed):
@@ -30,23 +26,25 @@ bash scripts/dev server      # Go server only
 bash scripts/dev run         # server + local client (desktop)
 ```
 
-[How to record and add the demo GIF](docs/DEMO.md)
+[How to record and add a demo GIF](docs/DEMO.md) — only include it if the capture is real and working.
 
 ## What this project demonstrates
-- Real-time 3D client (Python, OpenGL) with engine subsystems (world, physics, camera, lighting, UI)
-- WebSocket server (Go) scaffolding for multiplayer
-- Clear, reproducible dev flows, CI, and code-quality gates
-
-## Quick demo
-- Add a short screen capture/GIF to `docs/demo.gif` and embed it here.
-
-## Architecture (high level)
-```
-Python Client (OpenGL)  <——WS——>  Go Server
-        |                             |
-   Assets/Physics                (DB/Cache optional)
-```
-See `docs/ARCHITECTURE.md` for component responsibilities and message shapes.
+- 3D engine subsystems (Python):
+  - Physics: `physics_engine.py`
+  - World/terrain: `world.py`
+  - Camera: `camera.py`
+  - Lighting: `lighting.py`
+  - Rendering/game loop: `game_engine.py`, `main.py`
+  - UI: `ui_manager.py`
+  - Assets: `asset_manager.py`
+- Multiplayer (Go):
+  - WebSockets server: `go/server/main.go`
+  - Client session handling: `go/networking/client.go`
+  - Messages: `go/models/models.go`
+- Headless test path for CI: `HEADLESS=1 python3 main.py`
+- Bench harness: `bench/`, `scripts/bench_*`
+- Safety/authority design and stubs: see `docs/AUTHORITY_REPLICATION.md`
+- Observability: Prometheus `/metrics` on Go server (see docs)
 
 ## Development
 - Python: `HEADLESS=1 python3 main.py`
@@ -65,13 +63,22 @@ pytest -q            # if you have pytest installed
 ```
 
 ## Performance
-- Replace targets with measured results and scripts in `bench/`.
-- Example metrics (to be reproduced):
-  - Client tick: 60 FPS headless loop stable on CI
-  - WS broadcast (Go): ~2k msgs/sec (M2/16GB) – scripts in `bench/`
+- Measured results: see `bench/RESULTS.md`
+- Bench scripts: `scripts/bench_client_tick.py`, `scripts/bench_ws_throughput.py`
+
+## Safety / Authority / Replication
+- Design: `docs/AUTHORITY_REPLICATION.md`
+- Anti-abuse: basic rate-limit + moderation stub in Go chat handler
+
+## Observability
+- Go server exposes Prometheus metrics at `/metrics`
+- See `docker/monitoring/prometheus.yml` for scrape example
 
 ## Optional stacks
-- Extra services (Prometheus, Grafana, ELK, Nginx) are included as examples under `docker/` but not required for core demo.
+- Extra services (Prometheus, Grafana, ELK, Nginx) are examples under `docker/` but not required for core demo.
+
+## Team & contribution signals
+- See `docs/GOOD_FIRST_ISSUES.md` and `docs/PROJECTS.md`
 
 ## Disclaimer
 - This project is inspired by Roblox creator experiences. It is not affiliated with, endorsed by, or a product of Roblox.

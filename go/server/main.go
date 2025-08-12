@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -21,7 +22,18 @@ import (
 	"github.com/Seif-Abdelhamid/roblox-creator-studio/database"
 	"github.com/Seif-Abdelhamid/roblox-creator-studio/models"
 	"github.com/google/uuid"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
+
+var (
+	metricMsgsRx = prometheus.NewCounter(prometheus.CounterOpts{Name: "rcs_msgs_rx_total"})
+	metricMsgsTx = prometheus.NewCounter(prometheus.CounterOpts{Name: "rcs_msgs_tx_total"})
+)
+
+func init() {
+	prometheus.MustRegister(metricMsgsRx, metricMsgsTx)
+}
 
 // GameServer represents the main game server
 type GameServer struct {
@@ -85,6 +97,8 @@ func (gs *GameServer) Start() error {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		gs.handleWebSocket(upgrader, w, r)
 	})
+
+	http.Handle("/metrics", promhttp.Handler())
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -271,19 +285,39 @@ func (gs *GameServer) handleChat(client *networking.Client, message models.GameM
 	if !ok {
 		return
 	}
-
-	// Log chat message
-	log.Printf("💬 [%s]: %s", client.ID, chatData["message"])
-
-	// Broadcast to all players
+	// Basic anti-abuse: rate-limit and naive moderation
+	if !gs.allowChat(client) {
+		return
+	}
+	text, _ := chatData["message"].(string)
+	if gs.isBannedText(text) {
+		return
+	}
+	metricMsgsRx.Inc()
+	log.Printf("💬 [%s]: %s", client.ID, text)
 	gs.broadcastToAll(models.GameMessage{
 		Type: "chat",
 		Data: map[string]interface{}{
-			"playerId": client.ID,
-			"message":  chatData["message"],
+			"playerId":  client.ID,
+			"message":   text,
 			"timestamp": time.Now().Unix(),
 		},
 	})
+	metricMsgsTx.Inc()
+}
+
+func (gs *GameServer) allowChat(client *networking.Client) bool {
+	// TODO: replace with token bucket per client
+	return true
+}
+
+func (gs *GameServer) isBannedText(s string) bool {
+	if s == "" { return false }
+	lower := strings.ToLower(s)
+	for _, w := range []string{"spam", "abuse"} {
+		if strings.Contains(lower, w) { return true }
+	}
+	return false
 }
 
 // handleBuild processes building actions
