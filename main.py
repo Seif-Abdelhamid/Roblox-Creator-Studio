@@ -27,8 +27,13 @@ from config import GameConfig
 class RobloxCreatorStudio:
     def __init__(self):
         """Initialize the Roblox Creator Studio game."""
-        pygame.init()
         self.config = GameConfig()
+        # Configure headless environment if enabled
+        if self.config.HEADLESS:
+            os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+            os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+            os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
+        pygame.init()
         self.running = False
         self.clock = pygame.time.Clock()
         
@@ -36,13 +41,16 @@ class RobloxCreatorStudio:
         self.asset_manager = AssetManager()
         self.network_manager = NetworkManager()
         self.ui_manager = UIManager()
-        self.game_engine = GameEngine()
+        self.game_engine = GameEngine(headless=self.config.HEADLESS)
         
         # Setup display
         self.setup_display()
         
         # Game state
         self.current_scene = "main_menu"
+        if self.config.HEADLESS:
+            # Exercise core systems during smoke tests
+            self.current_scene = "game"
         self.player_data = {
             "username": "Player",
             "level": 1,
@@ -52,19 +60,20 @@ class RobloxCreatorStudio:
         
     def setup_display(self):
         """Setup the game display and OpenGL context."""
+        if self.config.HEADLESS:
+            # Skip creating an OpenGL window in headless mode
+            return
         pygame.display.set_mode(
             (self.config.WINDOW_WIDTH, self.config.WINDOW_HEIGHT),
             DOUBLEBUF | OPENGL
         )
         pygame.display.set_caption("Roblox Creator Studio - Connect • Create • Play")
-        
         # Setup OpenGL
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_LIGHTING)
         glEnable(GL_LIGHT0)
         glEnable(GL_COLOR_MATERIAL)
         glClearColor(0.2, 0.3, 0.5, 1.0)
-        
         # Setup perspective
         glMatrixMode(GL_PROJECTION)
         gluPerspective(45, (self.config.WINDOW_WIDTH / self.config.WINDOW_HEIGHT), 0.1, 50.0)
@@ -76,14 +85,23 @@ class RobloxCreatorStudio:
         print("🎮 Welcome to Roblox Creator Studio!")
         print("🌍 Connecting to the global community...")
         
-        # Start network connection
-        self.network_manager.connect()
+        # Start network connection (skip in headless smoke test)
+        if not self.config.HEADLESS:
+            self.network_manager.connect()
         
-        while self.running:
-            self.handle_events()
-            self.update()
-            self.render()
-            self.clock.tick(self.config.FPS)
+        # In headless mode, run a short smoke test loop without rendering
+        if self.config.HEADLESS:
+            iterations = int(os.environ.get("HEADLESS_TICKS", "120"))
+            for _ in range(iterations):
+                self.update()
+                time.sleep(1.0 / self.config.FPS)
+            self.running = False
+        else:
+            while self.running:
+                self.handle_events()
+                self.update()
+                self.render()
+                self.clock.tick(self.config.FPS)
             
         self.cleanup()
         
@@ -106,12 +124,15 @@ class RobloxCreatorStudio:
         """Update game logic."""
         if self.current_scene == "game":
             self.game_engine.update()
-            self.network_manager.update()
+            if not self.config.HEADLESS:
+                self.network_manager.update()
             
         self.ui_manager.update()
         
     def render(self):
         """Render the current scene."""
+        if self.config.HEADLESS:
+            return
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
         
@@ -128,6 +149,8 @@ class RobloxCreatorStudio:
         
     def render_main_menu(self):
         """Render the main menu."""
+        if self.config.HEADLESS:
+            return
         # 2D overlay for UI
         glMatrixMode(GL_PROJECTION)
         glPushMatrix()
@@ -154,21 +177,28 @@ class RobloxCreatorStudio:
         
     def render_game(self):
         """Render the 3D game world."""
+        if self.config.HEADLESS:
+            return
         self.game_engine.render()
         self.ui_manager.render_game_ui()
         
     def render_pause_menu(self):
         """Render the pause menu."""
+        if self.config.HEADLESS:
+            return
         self.ui_manager.render_pause_menu()
         
     def render_settings(self):
         """Render the settings menu."""
+        if self.config.HEADLESS:
+            return
         self.ui_manager.render_settings()
         
     def cleanup(self):
         """Cleanup resources before exit."""
         print("👋 Thanks for playing Roblox Creator Studio!")
-        self.network_manager.disconnect()
+        if not self.config.HEADLESS:
+            self.network_manager.disconnect()
         pygame.quit()
         sys.exit()
 

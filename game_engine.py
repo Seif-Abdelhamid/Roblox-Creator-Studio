@@ -19,8 +19,9 @@ from lighting import LightingSystem
 class GameEngine:
     """Main game engine class handling 3D rendering and game logic."""
     
-    def __init__(self):
+    def __init__(self, headless: bool = False):
         """Initialize the game engine."""
+        self.is_headless = headless
         self.world = World()
         self.physics_engine = PhysicsEngine()
         self.camera = Camera()
@@ -43,8 +44,9 @@ class GameEngine:
         self.frame_time = 0.0
         
         # Initialize systems
-        self.setup_rendering()
-        self.setup_lighting()
+        if not self.is_headless:
+            self.setup_rendering()
+            self.setup_lighting()
         
     def setup_rendering(self):
         """Setup OpenGL rendering settings."""
@@ -86,7 +88,8 @@ class GameEngine:
         self.world.update(delta_time)
         
         # Update lighting based on day/night cycle
-        self.update_lighting()
+        if not self.is_headless:
+            self.update_lighting()
         
         # Update other players
         for player in self.other_players.values():
@@ -118,6 +121,8 @@ class GameEngine:
         
     def render(self):
         """Render the 3D world."""
+        if self.is_headless:
+            return
         # Clear buffers
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         
@@ -201,47 +206,13 @@ class GameEngine:
         glPopMatrix()
         
     def render_players(self):
-        """Render all players."""
-        # Render local player
-        self.local_player.render()
+        """Render other players in the world."""
+        # Placeholder for rendering other players
+        pass
         
-        # Render other players
-        for player in self.other_players.values():
-            player.render()
-            
     def render_3d_ui(self):
-        """Render 3D UI elements."""
-        # Render player name tags
-        self.render_name_tags()
-        
-        # Render interaction prompts
-        self.render_interaction_prompts()
-        
-    def render_name_tags(self):
-        """Render player name tags above their heads."""
-        glDisable(GL_LIGHTING)
-        glDisable(GL_DEPTH_TEST)
-        
-        for player in [self.local_player] + list(self.other_players.values()):
-            if player.position.distance_to(self.camera.position) < 50:
-                # Calculate screen position
-                screen_pos = self.world_to_screen(player.position + (0, 2, 0))
-                
-                if screen_pos:
-                    # Render name tag
-                    self.render_text_2d(
-                        player.username,
-                        screen_pos[0], screen_pos[1],
-                        color=(1.0, 1.0, 1.0),
-                        size=14
-                    )
-                    
-        glEnable(GL_LIGHTING)
-        glEnable(GL_DEPTH_TEST)
-        
-    def render_interaction_prompts(self):
-        """Render interaction prompts for nearby objects."""
-        # This would show prompts for interactable objects
+        """Render 3D UI elements like markers and indicators."""
+        # Placeholder for 3D UI rendering
         pass
         
     def world_to_screen(self, world_pos):
