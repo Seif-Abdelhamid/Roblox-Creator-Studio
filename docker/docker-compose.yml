@@ -1,0 +1,288 @@
+version: '3.8'
+
+# Roblox Creator Studio - Docker Compose Configuration
+# Author: Seif Abdelhamid
+# GitHub: https://github.com/Seif-Abdelhamid
+
+services:
+  # Python Game Server
+  game-server:
+    build:
+      context: ../python
+      dockerfile: Dockerfile
+    container_name: roblox-creator-studio-game
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/roblox_studio
+      - REDIS_URL=redis://redis:6379
+      - SERVER_PORT=8080
+      - MAX_PLAYERS=50
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - game_data:/app/data
+      - game_logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - roblox-network
+
+  # Go Networking Server
+  go-server:
+    build:
+      context: ../go
+      dockerfile: Dockerfile
+    container_name: roblox-creator-studio-go
+    ports:
+      - "8081:8080"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/roblox_studio
+      - REDIS_URL=redis://redis:6379
+      - SERVER_PORT=8080
+      - MAX_PLAYERS=100
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - go_data:/app/data
+    restart: unless-stopped
+    networks:
+      - roblox-network
+
+  # Node.js Web API
+  web-api:
+    build:
+      context: ../nodejs
+      dockerfile: Dockerfile
+    container_name: roblox-creator-studio-api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/roblox_studio
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your-super-secret-jwt-key
+      - CORS_ORIGIN=http://localhost:3001
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - api_data:/app/data
+      - api_logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - roblox-network
+
+  # TypeScript React UI
+  web-ui:
+    build:
+      context: ../typescript
+      dockerfile: Dockerfile
+    container_name: roblox-creator-studio-ui
+    ports:
+      - "3001:80"
+    environment:
+      - REACT_APP_API_URL=http://localhost:3000
+      - REACT_APP_WS_URL=ws://localhost:8080
+      - REACT_APP_GO_SERVER_URL=http://localhost:8081
+    depends_on:
+      - web-api
+    restart: unless-stopped
+    networks:
+      - roblox-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: roblox-creator-studio-db
+    environment:
+      - POSTGRES_DB=roblox_studio
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - roblox-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: roblox-creator-studio-cache
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - roblox-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: roblox-creator-studio-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - web-ui
+      - web-api
+      - game-server
+      - go-server
+    restart: unless-stopped
+    networks:
+      - roblox-network
+
+  # Monitoring - Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: roblox-creator-studio-monitoring
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - roblox-network
+
+  # Monitoring - Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: roblox-creator-studio-grafana
+    ports:
+      - "3002:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - roblox-network
+
+  # Log Aggregation - ELK Stack
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+    container_name: roblox-creator-studio-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    restart: unless-stopped
+    networks:
+      - roblox-network
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.8.0
+    container_name: roblox-creator-studio-logstash
+    volumes:
+      - ./monitoring/logstash/pipeline:/usr/share/logstash/pipeline
+    ports:
+      - "5044:5044"
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+    networks:
+      - roblox-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.8.0
+    container_name: roblox-creator-studio-kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+    networks:
+      - roblox-network
+
+  # Development Tools
+  adminer:
+    image: adminer:latest
+    container_name: roblox-creator-studio-adminer
+    ports:
+      - "8082:8080"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - roblox-network
+
+  # Backup Service
+  backup:
+    image: postgres:15-alpine
+    container_name: roblox-creator-studio-backup
+    volumes:
+      - ./backup:/backup
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=password
+    command: |
+      sh -c '
+        while true; do
+          pg_dump -h postgres -U postgres -d roblox_studio > /backup/backup_$$(date +%Y%m%d_%H%M%S).sql
+          sleep 86400
+        done
+      '
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - roblox-network
+
+volumes:
+  game_data:
+    driver: local
+  go_data:
+    driver: local
+  api_data:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  nginx_logs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+  game_logs:
+    driver: local
+  api_logs:
+    driver: local
+
+networks:
+  roblox-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

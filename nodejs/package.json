@@ -1,0 +1,97 @@
+{
+  "name": "roblox-creator-studio-web",
+  "version": "1.0.0",
+  "description": "Web components and API for Roblox Creator Studio - A 3D multiplayer game engine",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js",
+    "build": "webpack --mode production",
+    "test": "jest",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "keywords": [
+    "roblox",
+    "game-engine",
+    "3d",
+    "multiplayer",
+    "websocket",
+    "real-time",
+    "nodejs",
+    "express",
+    "react",
+    "typescript"
+  ],
+  "author": {
+    "name": "Seif Abdelhamid",
+    "email": "seifwaelabdelhamid@gmail.com",
+    "url": "https://github.com/Seif-Abdelhamid"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Seif-Abdelhamid/roblox-creator-studio.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Seif-Abdelhamid/roblox-creator-studio/issues"
+  },
+  "homepage": "https://github.com/Seif-Abdelhamid/roblox-creator-studio#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0",
+    "compression": "^1.7.4",
+    "morgan": "^1.10.0",
+    "dotenv": "^16.3.1",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^7.5.0",
+    "redis": "^4.6.8",
+    "joi": "^17.9.2",
+    "multer": "^1.4.5-lts.1",
+    "sharp": "^0.32.5",
+    "nodemailer": "^6.9.4",
+    "rate-limiter-flexible": "^2.4.2",
+    "express-rate-limit": "^6.10.0",
+    "express-validator": "^7.0.1",
+    "winston": "^3.10.0",
+    "uuid": "^9.0.0",
+    "moment": "^2.29.4",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "jest": "^29.6.2",
+    "supertest": "^6.3.3",
+    "eslint": "^8.47.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.2",
+    "@types/node": "^20.5.0",
+    "@types/express": "^4.17.17",
+    "@types/cors": "^2.8.13",
+    "@types/bcryptjs": "^2.4.2",
+    "@types/jsonwebtoken": "^9.0.2",
+    "@types/multer": "^1.4.7",
+    "@types/nodemailer": "^6.4.9",
+    "@types/uuid": "^9.0.2",
+    "@types/lodash": "^4.14.197",
+    "typescript": "^5.1.6",
+    "ts-node": "^10.9.1",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1",
+    "html-webpack-plugin": "^5.5.3",
+    "css-loader": "^6.8.1",
+    "style-loader": "^3.3.3",
+    "file-loader": "^6.2.0",
+    "url-loader": "^4.1.1"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "private": true
+}
